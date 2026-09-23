@@ -1,0 +1,19 @@
+# 調査対象OSSの一時clone
+upstream/
+.work/
+tmp/
+
+# ローカル実験出力
+artifacts/local/
+*.log
+
+# 認証情報・環境変数
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
