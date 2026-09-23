@@ -82,6 +82,23 @@ class H(BaseHTTPRequestHandler):
         self._write("PATH " + self.path)
         self._write("AUTHORIZATION " + str(self.headers.get("authorization")))
         self._write("X_API_KEY " + str(self.headers.get("x-api-key")))
+        for key in [
+            "anthropic-version", "anthropic-beta", "user-agent",
+            "content-type", "x-stainless-lang", "x-stainless-runtime",
+            "x-stainless-runtime-version", "x-stainless-package-version"
+        ]:
+            self._write("HEADER " + key + "=" + str(self.headers.get(key)))
+        try:
+            obj = json.loads(body)
+            self._write("JSON_KEYS " + ",".join(sorted(obj.keys())))
+            self._write("MODEL " + str(obj.get("model")))
+            self._write("OUTPUT_CONFIG " + json.dumps(obj.get("output_config"), sort_keys=True))
+            self._write("THINKING " + json.dumps(obj.get("thinking"), sort_keys=True))
+            self._write("TOOL_CHOICE " + json.dumps(obj.get("tool_choice"), sort_keys=True))
+            tools = obj.get("tools")
+            self._write("TOOLS_COUNT " + str(len(tools) if isinstance(tools, list) else None))
+        except Exception as e:
+            self._write("JSON_PARSE_ERROR " + repr(e))
         self._write("BODY_PREFIX " + body[:300].decode("utf-8", "replace"))
         payload = json.dumps({
             "type": "error",
