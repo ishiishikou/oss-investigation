@@ -31,6 +31,21 @@
 
 大きな検証は子Issueへ切り出します。
 
+### CLAIM / CHECKPOINT / RELEASE
+
+長期調査では、thoughtbaseで確立したIssue運用を適用します。
+
+- `CLAIM` — 作業scope、開始時刻、lease期限、workerを記録する。
+- `CHECKPOINT` — 実施内容、具体的結果、commit / workflow run / artifact等の識別子、解釈、次の最小scopeを記録する。
+- `RELEASE` — claimしたscopeの完了またはblockを明示する。
+- 必要に応じて最後に `FINAL SUMMARY` を残す。
+
+作業開始前にIssue本文と最新コメントを読み、未期限切れの同一scopeのCLAIMがある場合は重複実行しません。
+非同期処理が進行中の場合も、同じ目的のrunを重複起動せず、完了見込みに合わせて結果を回収します。
+
+1回の作業では、Issueから復元した「次の最小scope」だけを進め、clean checkpointに到達した時点でIssueへ記録します。
+チャット履歴や一時コンテナを引き継ぎの正本にしません。
+
 ## 3. 上流コードは一時cloneする
 
 上流コードはこのリポジトリへvendorしません。
