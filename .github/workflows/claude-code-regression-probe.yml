@@ -1,0 +1,47 @@
+name: Claude Code 2.1.205 regression probe
+
+on:
+  push:
+    branches:
+      - exp/claude-code-2-1-205
+    paths:
+      - ".github/workflows/claude-code-regression-probe.yml"
+      - "scripts/probe-claude-code-regression.sh"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - "2.1.204"
+          - "2.1.205"
+          - "2.1.207"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.jsを準備
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: QEMU user emulatorを準備
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user file
+
+      - name: Claude Codeを検証
+        run: |
+          chmod +x scripts/probe-claude-code-regression.sh
+          scripts/probe-claude-code-regression.sh "${{ matrix.version }}" "probe-output-${{ matrix.version }}"
+
+      - name: 検証ログを保存
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-code-${{ matrix.version }}
+          path: probe-output-${{ matrix.version }}/
+          if-no-files-found: warn
