@@ -1,0 +1,44 @@
+name: Claude API error retry probe
+
+on:
+  push:
+    branches:
+      - exp/claude-code-2-1-205
+    paths:
+      - ".github/workflows/claude-api-error-retry-probe.yml"
+      - "scripts/probe-claude-api-retry.sh"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        status: [401, 429, 500, 503, 529]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.jsを準備
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: API error時のretry時間を測定
+        env:
+          MAX_SECONDS: "210"
+        run: |
+          chmod +x scripts/probe-claude-api-retry.sh
+          scripts/probe-claude-api-retry.sh \
+            "${{ matrix.status }}" \
+            "2.1.205" \
+            "retry-probe-${{ matrix.status }}"
+
+      - name: 検証ログを保存
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-probe-${{ matrix.status }}
+          path: retry-probe-${{ matrix.status }}/
+          if-no-files-found: warn
