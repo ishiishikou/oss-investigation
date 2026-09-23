@@ -1,0 +1,36 @@
+name: Docker Security Reviewer image build probe
+
+on:
+  push:
+    branches:
+      - exp/claude-code-2-1-205
+    paths:
+      - ".github/workflows/security-reviewer-image-build-probe.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        claude_code_version:
+          - "2.1.204"
+          - "2.1.205"
+
+    steps:
+      - name: Docker MCP Registryを一時clone
+        run: |
+          git clone --depth 1 https://github.com/docker/mcp-registry.git /tmp/mcp-registry
+
+      - name: Security Reviewer imageをbuild
+        run: |
+          docker build             --target reviewer-image             --build-arg "CLAUDE_CODE_VERSION=${{ matrix.claude_code_version }}"             --build-arg "CODEX_CLI_VERSION=0.143.0"             -t "security-reviewer-probe:${{ matrix.claude_code_version }}"             /tmp/mcp-registry/agents/security-reviewer
+
+      - name: イメージ内のClaude Code versionを確認
+        run: |
+          docker run --rm             --entrypoint claude             "security-reviewer-probe:${{ matrix.claude_code_version }}"             --version
+
+      - name: イメージ情報を記録
+        run: |
+          docker image inspect "security-reviewer-probe:${{ matrix.claude_code_version }}"             --format 'image_id={{.Id}} size={{.Size}} created={{.Created}}'
