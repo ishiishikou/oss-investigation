@@ -38,17 +38,32 @@ done | tee "$OUTDIR/files.txt"
 ELF="$(grep 'ELF 64-bit.*x86-64' "$OUTDIR/files.txt" | head -n1 | cut -d: -f1 || true)"
 echo "ELF=$ELF" | tee -a "$OUTDIR/summary.txt"
 
-if [[ -n "$ELF" ]] && command -v qemu-x86_64 >/dev/null 2>&1; then
-  echo "=== qemu x86_64 / qemu64 --version ===" | tee -a "$OUTDIR/summary.txt"
-  set +e
-  timeout 20s qemu-x86_64 -L / -cpu qemu64 "$ELF" --version >"$OUTDIR/qemu64-version.out" 2>"$OUTDIR/qemu64-version.err"
-  QEMU_RC=$?
-  set -e
-  echo "qemu64_rc=$QEMU_RC" | tee -a "$OUTDIR/summary.txt"
-  cat "$OUTDIR/qemu64-version.out" | tee -a "$OUTDIR/summary.txt"
-  cat "$OUTDIR/qemu64-version.err" | tee -a "$OUTDIR/summary.txt"
+if [[ -n "$ELF" ]]; then
+  echo "=== ELF metadata ===" | tee -a "$OUTDIR/summary.txt"
+  readelf -n "$ELF" >"$OUTDIR/readelf-notes.txt" 2>&1 || true
+  objdump -f "$ELF" >"$OUTDIR/objdump-file.txt" 2>&1 || true
+  cat "$OUTDIR/readelf-notes.txt" | tee -a "$OUTDIR/summary.txt"
+  cat "$OUTDIR/objdump-file.txt" | tee -a "$OUTDIR/summary.txt"
+
+  if command -v qemu-x86_64 >/dev/null 2>&1; then
+    echo "=== QEMU CPU model matrix: --version ===" | tee -a "$OUTDIR/summary.txt"
+    qemu-x86_64 -cpu help >"$OUTDIR/qemu-cpu-help.txt" 2>&1 || true
+    for cpu in qemu64 Nehalem Westmere SandyBridge IvyBridge Haswell Broadwell Skylake-Client max; do
+      set +e
+      timeout 10s qemu-x86_64 -L / -cpu "$cpu" "$ELF" --version \
+        >"$OUTDIR/qemu-$cpu.out" 2>"$OUTDIR/qemu-$cpu.err"
+      rc=$?
+      set -e
+      echo "qemu_cpu=$cpu rc=$rc stdout=$(tr '\n' ' ' < "$OUTDIR/qemu-$cpu.out" | head -c 160)" \
+        | tee -a "$OUTDIR/summary.txt"
+      if [[ -s "$OUTDIR/qemu-$cpu.err" ]]; then
+        echo "qemu_cpu=$cpu stderr=$(tr '\n' ' ' < "$OUTDIR/qemu-$cpu.err" | head -c 240)" \
+          | tee -a "$OUTDIR/summary.txt"
+      fi
+    done
+  fi
 else
-  echo "qemu64 probe skipped: native ELF not found" | tee -a "$OUTDIR/summary.txt"
+  echo "CPU probe skipped: native ELF not found" | tee -a "$OUTDIR/summary.txt"
 fi
 
 cat >"$TMPDIR/proxy.py" <<'PY'
