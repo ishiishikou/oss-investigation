@@ -1,0 +1,66 @@
+name: OSS調査
+description: OSSの不具合・配布・CI/CD・設計上の挙動を調査する
+title: "[Investigation] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        このIssueを調査のSSOTとして使用します。事実・仮説・未確認事項を分離して記録してください。
+
+  - type: input
+    id: upstream
+    attributes:
+      label: 上流リポジトリ
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: ユーザー影響
+      description: 利用者から見て何が問題になるか
+    validations:
+      required: true
+
+  - type: textarea
+    id: facts
+    attributes:
+      label: 確認済み事実
+      description: 推測を混ぜずに記載
+      placeholder: |
+        - 
+    validations:
+      required: true
+
+  - type: textarea
+    id: unknowns
+    attributes:
+      label: 未確認事項
+      placeholder: |
+        - 
+
+  - type: textarea
+    id: hypotheses
+    attributes:
+      label: 仮説
+      description: まだ確定していない説明
+      placeholder: |
+        - H1: 
+
+  - type: textarea
+    id: revisions
+    attributes:
+      label: 対象revision
+      placeholder: |
+        last known good:
+        first known bad:
+        current:
+
+  - type: textarea
+    id: next
+    attributes:
+      label: 次の作業
+      placeholder: |
+        - [ ] 
