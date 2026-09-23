@@ -1,0 +1,16 @@
+id: desktop-commander-docker-stale
+status: investigating
+
+upstream:
+  desktop_commander:
+    repository: https://github.com/wonderwhy-er/DesktopCommanderMCP
+    last_known_good: 0ad919bc188947fc55b1bf269df62f4b14b3880c
+    first_known_bad: d627e1baf8b51c5e0c64bf8e3da78c148743e44a
+    current_target: 75048278f4866f0d8bde26f6f9aa3b8d39dca870
+  docker_registry:
+    repository: https://github.com/docker/mcp-registry
+    update_pr: 4362
+
+notes:
+  - 上流OSSコードはこのリポジトリに保存しない
+  - revisionは検証の進行に応じて更新する
